@@ -14,18 +14,32 @@ import org.springframework.web.bind.annotation.RestController;
 import com.GreenEnergy.backupRestoreService.model.EstadoSistema;
 import com.GreenEnergy.backupRestoreService.service.EstadoSistemaService;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+
 @RestController
 @RequestMapping("/sistema")
+@Tag(name = "Estado del Sistema", description = "Operaciones relacionadas con el monitoreo y consulta del estado del sistema")
 public class EstadoSistemaController {
     @Autowired
     private EstadoSistemaService estadoSistemaService;
 
+    @Operation(summary = "Monitorear el estado actual del sistema")
+    @ApiResponse(responseCode = "200", description = "Estado del sistema retornado correctamente")
     @PostMapping("/monitorear")
     public ResponseEntity<EstadoSistema> monitorearSistema() {
         EstadoSistema estado = estadoSistemaService.monitorearSistema();
         return ResponseEntity.ok(estado);
     }
 
+    @Operation(summary = "Listar todos los estados monitoreados del sistema")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Lista de estados retornada correctamente"),
+        @ApiResponse(responseCode = "204", description = "No hay estados registrados")
+    })
     @GetMapping("/estados")
     public ResponseEntity<List<EstadoSistema>> listarEstados() {
         List<EstadoSistema> estados = estadoSistemaService.findAll();
@@ -35,8 +49,15 @@ public class EstadoSistemaController {
         return ResponseEntity.ok(estados);
     }
 
+    @Operation(summary = "Obtener un estado específico del sistema por su ID")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Estado encontrado"),
+        @ApiResponse(responseCode = "404", description = "Estado no encontrado")
+    })
     @GetMapping("/estados/{id}")
-    public ResponseEntity<?> obtenerPorId(@PathVariable Long id) {
+    public ResponseEntity<?> obtenerPorId(
+        @Parameter(description = "ID del estado a obtener", required = true)
+        @PathVariable Long id) {
         try {
             EstadoSistema estado = estadoSistemaService.findById(id);
             return ResponseEntity.ok(estado);
@@ -45,6 +66,11 @@ public class EstadoSistemaController {
         }
     }
 
+    @Operation(summary = "Obtener el último estado monitoreado del sistema")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Último estado retornado correctamente"),
+        @ApiResponse(responseCode = "404", description = "No hay estados registrados")
+    })
     @GetMapping("/estados/ultimo")
     public ResponseEntity<EstadoSistema> obtenerUltimoEstado() {
         EstadoSistema lastStatus = estadoSistemaService.getLastStatus();

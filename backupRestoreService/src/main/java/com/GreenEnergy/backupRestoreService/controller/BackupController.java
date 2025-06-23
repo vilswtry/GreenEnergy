@@ -15,12 +15,26 @@ import org.springframework.web.bind.annotation.RestController;
 import com.GreenEnergy.backupRestoreService.model.Backup;
 import com.GreenEnergy.backupRestoreService.service.BackupService;
 
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+
+@Tag(name = "Backup Controller", description = "API para gestionar backups de la base de datos")
+
 @RestController
 @RequestMapping("/backups")
 public class BackupController {
     @Autowired
     private BackupService backupService;
 
+    @Operation(summary = "Crear un nuevo backup")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "201", description = "Backup creado exitosamente"),
+            @ApiResponse(responseCode = "500", description = "Error interno del servidor al crear backup")
+    })
     @PostMapping
     public ResponseEntity<?> crearBackup() {
         try {
@@ -33,14 +47,26 @@ public class BackupController {
         }
     }
 
+    @Operation(summary = "Restaurar un backup existente por nombre de archivo")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Restauración completada exitosamente"),
+            @ApiResponse(responseCode = "500", description = "Error interno del servidor al restaurar backup")
+    })
     @PostMapping("/restore/{filename}")
-    public ResponseEntity<String> restaurarBackup(@PathVariable String filename) {
+    public ResponseEntity<String> restaurarBackup(
+            @Parameter(description = "Nombre del archivo de backup a restaurar", required = true) @PathVariable String filename) {
         backupService.restoreBackup(filename);
         return ResponseEntity.ok("Restauración completada: " + filename);
     }
 
+    @Operation(summary = "Eliminar un backup por nombre de archivo")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Backup eliminado correctamente"),
+            @ApiResponse(responseCode = "404", description = "Backup no encontrado o ya eliminado")
+    })
     @DeleteMapping("/{filename}")
-    public ResponseEntity<?> eliminarBackup(@PathVariable String filename) {
+    public ResponseEntity<?> eliminarBackup(
+            @Parameter(description = "Nombre del archivo de backup a eliminar", required = true) @PathVariable String filename) {
         boolean eliminado = backupService.deleteBackup(filename);
         if (eliminado) {
             return ResponseEntity.ok("Backup eliminado correctamente: " + filename);
@@ -49,8 +75,14 @@ public class BackupController {
         }
     }
 
+    @Operation(summary = "Obtener un backup por nombre de archivo")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Backup encontrado y retornado"),
+            @ApiResponse(responseCode = "404", description = "Backup no encontrado")
+    })
     @GetMapping("/{filename}")
-    public ResponseEntity<Backup> obtenerBackup(@PathVariable String filename) {
+    public ResponseEntity<Backup> obtenerBackup(
+            @Parameter(description = "Nombre del archivo de backup a obtener", required = true) @PathVariable String filename) {
         Backup backup = backupService.getBackup(filename);
         if (backup != null) {
             return ResponseEntity.ok(backup);
@@ -59,6 +91,11 @@ public class BackupController {
         }
     }
 
+    @Operation(summary = "Listar todos los archivos de backup")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Lista de archivos de backup retornada"),
+            @ApiResponse(responseCode = "204", description = "No hay archivos de backup disponibles")
+    })
     @GetMapping
     public ResponseEntity<List<String>> listarBackups() {
         List<String> backups = backupService.listBackupFiles();
