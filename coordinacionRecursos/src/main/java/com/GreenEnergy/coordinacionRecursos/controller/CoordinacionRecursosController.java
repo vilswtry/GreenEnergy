@@ -18,14 +18,26 @@ import com.GreenEnergy.coordinacionRecursos.DTO.ProjectRequest;
 import com.GreenEnergy.coordinacionRecursos.DTO.ReposicionRequest;
 import com.GreenEnergy.coordinacionRecursos.model.Material;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+
 @RestController
 @RequestMapping("/api/coordinacion")
+@Tag(name = "Coordinación de Recursos", description = "Endpoints para la asignación y gestión de materiales y técnicos")
 public class CoordinacionRecursosController {
 
     @Autowired
     private CoordinacionRecursosService coordinacionService;
 
     @PostMapping("/asignar")
+    @Operation(summary = "Asignar recursos a un proyecto")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Recursos asignados correctamente"),
+        @ApiResponse(responseCode = "400", description = "Fechas inválidas"),
+        @ApiResponse(responseCode = "409", description = "Error en la asignación")
+    })
     public ResponseEntity<?> asignarRecursos(@RequestBody ProjectRequest request) {
         try {
             if (request.getFechaInicio() == null || request.getFechaFin() == null) {
@@ -45,6 +57,11 @@ public class CoordinacionRecursosController {
     }
 
     @PostMapping("/asignar-mantencion")
+    @Operation(summary = "Asignar recursos a una mantención")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Recursos de mantención asignados correctamente"),
+        @ApiResponse(responseCode = "409", description = "Error en la asignación")
+    })
     public ResponseEntity<String> asignarMantencion(@RequestBody MantencionRequest request) {
         try {
             coordinacionService.asignarRecursosMantencion(request);
@@ -55,6 +72,11 @@ public class CoordinacionRecursosController {
     }
 
     @PostMapping("/devolver/{proyectoId}")
+    @Operation(summary = "Devolver materiales de un proyecto")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Materiales devueltos correctamente"),
+        @ApiResponse(responseCode = "400", description = "Error al devolver materiales del proyecto")
+    })
     public ResponseEntity<?> devolverMaterialesProyecto(@PathVariable Long proyectoId) {
         try {
             coordinacionService.devolverMaterialesProyecto(proyectoId);
@@ -66,6 +88,11 @@ public class CoordinacionRecursosController {
     }
 
     @PostMapping("/devolver-mantencion/{mantencionId}")
+    @Operation(summary = "Devolver materiales de una mantención")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Materiales devueltos correctamente"),
+        @ApiResponse(responseCode = "400", description = "Error al devolver materiales de la mantención")
+    })
     public ResponseEntity<?> devolverMaterialesMantencion(@PathVariable Long mantencionId) {
         try {
             coordinacionService.devolverMaterialesMantencion(mantencionId);
@@ -77,11 +104,15 @@ public class CoordinacionRecursosController {
     }
 
     @GetMapping("/materiales")
+    @Operation(summary = "Listar todos los materiales")
+    @ApiResponse(responseCode = "200", description = "Lista de materiales obtenida exitosamente")
     public ResponseEntity<List<Material>> listarMateriales() {
         return ResponseEntity.ok(coordinacionService.listarMateriales());
     }
 
     @GetMapping("/materiales/faltantes")
+    @Operation(summary = "Obtener materiales faltantes")
+    @ApiResponse(responseCode = "200", description = "Lista de materiales faltantes o mensaje de que no hay faltantes")
     public ResponseEntity<?> obtenerMaterialesFaltantes() {
         List<Material> faltantes = coordinacionService.listarMaterialesFaltantes();
         if (faltantes.isEmpty()) {
@@ -92,6 +123,11 @@ public class CoordinacionRecursosController {
     }
 
     @PostMapping("/materiales/reponer")
+    @Operation(summary = "Reponer stock de un material")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Material repuesto correctamente"),
+        @ApiResponse(responseCode = "400", description = "Error al reponer material")
+    })
     public ResponseEntity<?> reponerMaterial(@RequestBody ReposicionRequest request) {
         try {
             Material material = coordinacionService.reponerMaterial(request.getCodigoMaterial(), request.getCantidad());
@@ -102,6 +138,11 @@ public class CoordinacionRecursosController {
     }
 
     @GetMapping("/materiales/{codigoMaterial}")
+    @Operation(summary = "Buscar material por código")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Material encontrado"),
+        @ApiResponse(responseCode = "400", description = "Material no encontrado")
+    })
     public ResponseEntity<?> buscarPorCodigo(@PathVariable String codigoMaterial) {
         try {
             Material material = coordinacionService.buscarMaterialPorCodigo(codigoMaterial);
