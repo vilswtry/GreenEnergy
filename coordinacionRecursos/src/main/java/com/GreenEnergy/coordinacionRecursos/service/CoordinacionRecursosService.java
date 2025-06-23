@@ -8,7 +8,6 @@ import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import com.GreenEnergy.coordinacionRecursos.DTO.MantencionRequest;
@@ -21,6 +20,8 @@ import com.GreenEnergy.coordinacionRecursos.repository.MaterialAsignadoMantencio
 import com.GreenEnergy.coordinacionRecursos.repository.MaterialAsignadoProyectoRepository;
 import com.GreenEnergy.coordinacionRecursos.repository.MaterialRepository;
 import com.GreenEnergy.coordinacionRecursos.repository.TecnicoRepository;
+
+import jakarta.transaction.Transactional;
 
 @Transactional
 @Service

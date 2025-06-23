@@ -11,6 +11,9 @@ import org.springframework.stereotype.Service;
 import com.GreenEnergy.backupRestoreService.model.EstadoSistema;
 import com.GreenEnergy.backupRestoreService.repository.EstadoSistemaRepository;
 
+import jakarta.transaction.Transactional;
+
+@Transactional
 @Service
 public class EstadoSistemaService {
 @Autowired

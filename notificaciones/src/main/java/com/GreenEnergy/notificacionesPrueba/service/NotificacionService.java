@@ -2,6 +2,7 @@ package com.GreenEnergy.notificacionesPrueba.service;
 
 import java.util.List;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
@@ -11,15 +12,20 @@ import com.GreenEnergy.notificacionesPrueba.model.Notificacion;
 import com.GreenEnergy.notificacionesPrueba.repository.ClienteRepository;
 import com.GreenEnergy.notificacionesPrueba.repository.NotificacionRepository;
 
+import jakarta.transaction.Transactional;
 
-
-
+@Transactional
 @Service
 public class NotificacionService {
     
-    private final ClienteRepository clienteRepository;
-    private final NotificacionRepository notificacionRepository;
-    private final JavaMailSender mailSender = null;
+    @Autowired
+    private ClienteRepository clienteRepository;
+
+    @Autowired
+    private NotificacionRepository notificacionRepository;
+
+    @Autowired
+    private JavaMailSender mailSender;
 
     public void sendEmail(Long clienteId, String asunto, String mensaje) {
     Cliente cliente = clienteRepository.findById(clienteId)

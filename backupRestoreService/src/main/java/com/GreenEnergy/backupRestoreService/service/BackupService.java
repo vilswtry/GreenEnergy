@@ -12,6 +12,9 @@ import org.springframework.stereotype.Service;
 import com.GreenEnergy.backupRestoreService.model.Backup;
 import com.GreenEnergy.backupRestoreService.repository.BackupRepository;
 
+import jakarta.transaction.Transactional;
+
+@Transactional
 @Service
 public class BackupService {
 

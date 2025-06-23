@@ -11,7 +11,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.GreenEnergy.notificacionesPrueba.model.Cliente;
 import com.GreenEnergy.notificacionesPrueba.model.Notificacion;
 import com.GreenEnergy.notificacionesPrueba.service.NotificacionService;
 
