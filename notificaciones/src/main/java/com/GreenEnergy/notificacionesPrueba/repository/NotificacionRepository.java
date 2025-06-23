@@ -9,5 +9,6 @@ import com.GreenEnergy.notificacionesPrueba.model.Notificacion;
 
 @Repository
 public interface NotificacionRepository extends JpaRepository<Notificacion, Long> {
-List<Notificacion> findByClienteId(Long clienteId);
+
+List<Notificacion> findByUsuarioId(Long usuarioId);
 }

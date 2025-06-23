@@ -2,6 +2,13 @@
     "configurations": [
         {
             "type": "java",
+            "name": "NotificacionesPruebaApplication",
+            "request": "launch",
+            "mainClass": "com.GreenEnergy.notificacionesPrueba.NotificacionesPruebaApplication",
+            "projectName": "notificacionesPrueba"
+        },
+        {
+            "type": "java",
             "name": "GestionProyectosApplication",
             "request": "launch",
             "mainClass": "com.GreenEnergy.gestionProyectos.GestionProyectosApplication",
