@@ -5,14 +5,7 @@ import java.util.NoSuchElementException;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PatchMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import com.GreenEnergy.gestionProyectos.DTO.MantencionRequest;
 import com.GreenEnergy.gestionProyectos.DTO.ProjectRequest;
@@ -21,8 +14,12 @@ import com.GreenEnergy.gestionProyectos.model.Mantencion;
 import com.GreenEnergy.gestionProyectos.model.Proyecto;
 import com.GreenEnergy.gestionProyectos.service.ProyectoMantencionService;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 @RestController
 @RequestMapping("/api/proyectos")
+@Tag(name = "Gestión de Proyectos", description = "Operaciones relacionadas con proyectos y mantenciones")
 public class ProyectoController {
 
     private final ProyectoMantencionService proyectoService;
@@ -31,6 +28,7 @@ public class ProyectoController {
         this.proyectoService = proyectoService;
     }
 
+    @Operation(summary = "Crear un nuevo proyecto")
     @PostMapping
     public ResponseEntity<?> crearProyecto(@RequestBody ProjectRequest request) {
         try {
@@ -42,6 +40,7 @@ public class ProyectoController {
         }
     }
 
+    @Operation(summary = "Crear una nueva mantención")
     @PostMapping("/mantencion")
     public ResponseEntity<?> crearMantencion(@RequestBody MantencionRequest request) {
         try {
@@ -53,16 +52,19 @@ public class ProyectoController {
         }
     }
 
+    @Operation(summary = "Listar todos los proyectos")
     @GetMapping
     public ResponseEntity<List<Proyecto>> listarProyectos() {
         return ResponseEntity.ok(proyectoService.listarProyectos());
     }
 
+    @Operation(summary = "Listar todas las mantenciones")
     @GetMapping("/mantenciones")
     public ResponseEntity<List<Mantencion>> listarMantenciones() {
         return ResponseEntity.ok(proyectoService.listarMantenciones());
     }
 
+    @Operation(summary = "Obtener un proyecto por su ID")
     @GetMapping("/{id}")
     public ResponseEntity<Proyecto> obtenerProyecto(@PathVariable Long id) {
         return proyectoService.obtenerProyectoPorId(id)
@@ -70,6 +72,7 @@ public class ProyectoController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
+    @Operation(summary = "Obtener una mantención por su ID")
     @GetMapping("/mantencion/{id}")
     public ResponseEntity<Mantencion> obtenerMantencion(@PathVariable Long id) {
         return proyectoService.obtenerMantencionPorId(id)
@@ -77,6 +80,7 @@ public class ProyectoController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
+    @Operation(summary = "Actualizar parcialmente un proyecto")
     @PatchMapping("/{id}")
     public ResponseEntity<?> actualizarProyecto(@PathVariable Long id, @RequestBody ProjectUpdateRequest request) {
         try {
@@ -87,6 +91,7 @@ public class ProyectoController {
         }
     }
 
+    @Operation(summary = "Cancelar un proyecto")
     @PutMapping("/{id}/cancelar")
     public ResponseEntity<?> cancelarProyecto(@PathVariable Long id) {
         try {
@@ -101,6 +106,7 @@ public class ProyectoController {
         }
     }
 
+    @Operation(summary = "Cancelar una mantención")
     @PutMapping("/{id}/cancelar-mantencion")
     public ResponseEntity<?> cancelarMantencion(@PathVariable Long id) {
         try {
@@ -115,11 +121,13 @@ public class ProyectoController {
         }
     }
 
+    @Operation(summary = "Listar proyectos en curso")
     @GetMapping("/en-curso")
     public ResponseEntity<List<Proyecto>> proyectosEnCurso() {
         return ResponseEntity.ok(proyectoService.proyectosEnCurso());
     }
 
+    @Operation(summary = "Finalizar un proyecto anticipadamente")
     @PutMapping("/{id}/finalizar")
     public ResponseEntity<?> finalizarProyectoAnticipadamente(@PathVariable Long id) {
         try {

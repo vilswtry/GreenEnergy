@@ -2,6 +2,13 @@
     "configurations": [
         {
             "type": "java",
+            "name": "GestionProyectosApplication",
+            "request": "launch",
+            "mainClass": "com.GreenEnergy.gestionProyectos.GestionProyectosApplication",
+            "projectName": "gestionProyectos"
+        },
+        {
+            "type": "java",
             "name": "CoordinacionRecursosApplication",
             "request": "launch",
             "mainClass": "com.GreenEnergy.coordinacionRecursos.CoordinacionRecursosApplication",
