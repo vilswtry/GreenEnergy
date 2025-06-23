@@ -2,6 +2,20 @@
     "configurations": [
         {
             "type": "java",
+            "name": "SoporteTecnicoApplication",
+            "request": "launch",
+            "mainClass": "com.GreenEnergy.soporteTecnico.SoporteTecnicoApplication",
+            "projectName": "soporteTecnico"
+        },
+        {
+            "type": "java",
+            "name": "NotificacionesApplication",
+            "request": "launch",
+            "mainClass": "com.GreenEnergy.notificaciones.NotificacionesApplication",
+            "projectName": "notificacionesPrueba"
+        },
+        {
+            "type": "java",
             "name": "NotificacionesPruebaApplication",
             "request": "launch",
             "mainClass": "com.GreenEnergy.notificacionesPrueba.NotificacionesPruebaApplication",

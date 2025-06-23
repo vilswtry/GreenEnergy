@@ -6,11 +6,6 @@ import static org.assertj.core.api.Assertions.*;
 import java.util.List;
 import java.util.Optional;
 
-import com.GreenEnergy.notificacionesPrueba.model.Notificacion;
-import com.GreenEnergy.notificacionesPrueba.model.Usuario;
-import com.GreenEnergy.notificacionesPrueba.repository.NotificacionRepository;
-import com.GreenEnergy.notificacionesPrueba.repository.UsuarioRepository;
-
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -18,6 +13,12 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
+
+import com.GreenEnergy.notificaciones.model.Notificacion;
+import com.GreenEnergy.notificaciones.model.Usuario;
+import com.GreenEnergy.notificaciones.repository.NotificacionRepository;
+import com.GreenEnergy.notificaciones.repository.UsuarioRepository;
+import com.GreenEnergy.notificaciones.service.NotificacionService;
 
 @ExtendWith(MockitoExtension.class)
 public class NotificacionServiceTest {

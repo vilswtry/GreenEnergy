@@ -1,7 +1,5 @@
 package com.GreenEnergy.notificacionesPrueba.controller;
 
-import com.GreenEnergy.notificacionesPrueba.model.Notificacion;
-import com.GreenEnergy.notificacionesPrueba.service.NotificacionService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import static org.mockito.Mockito.*;
@@ -11,6 +9,10 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.web.servlet.MockMvc;
+
+import com.GreenEnergy.notificaciones.controller.NotificacionController;
+import com.GreenEnergy.notificaciones.model.Notificacion;
+import com.GreenEnergy.notificaciones.service.NotificacionService;
 
 import java.util.List;
 
