@@ -16,7 +16,7 @@ public class MantencionRequest {
     @Schema(description = "ID de la mantención", example = "1")
     private Long mantencionId;
 
-    @Schema(description = "Nombre del cliente o proyecto", example = "Juan Pérez")
+    @Schema(description = "Nombre del proyecto", example = "Mantencion en empresa del norte")
     private String nombre;
 
     @Schema(description = "Fecha programada para la mantención", example = "2025-07-15")
