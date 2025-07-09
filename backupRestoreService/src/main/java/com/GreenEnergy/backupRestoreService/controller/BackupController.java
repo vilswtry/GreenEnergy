@@ -15,9 +15,11 @@ import org.springframework.web.bind.annotation.RestController;
 import com.GreenEnergy.backupRestoreService.model.Backup;
 import com.GreenEnergy.backupRestoreService.service.BackupService;
 
-
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -32,7 +34,7 @@ public class BackupController {
 
     @Operation(summary = "Crear un nuevo backup")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "201", description = "Backup creado exitosamente"),
+            @ApiResponse(responseCode = "201", description = "Backup creado exitosamente", content = @Content(mediaType = "application/json", schema = @Schema(implementation = Backup.class))),
             @ApiResponse(responseCode = "500", description = "Error interno del servidor al crear backup")
     })
     @PostMapping
@@ -40,10 +42,9 @@ public class BackupController {
         try {
             Backup backup = backupService.createBackup();
             return ResponseEntity.status(HttpStatus.CREATED).body(backup);
-
         } catch (Exception e) {
-            e.printStackTrace();
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Error interno al crear el backup.");
         }
     }
 
@@ -55,54 +56,76 @@ public class BackupController {
     @PostMapping("/restore/{filename}")
     public ResponseEntity<String> restaurarBackup(
             @Parameter(description = "Nombre del archivo de backup a restaurar", required = true) @PathVariable String filename) {
-        backupService.restoreBackup(filename);
-        return ResponseEntity.ok("Restauración completada: " + filename);
+        try {
+            backupService.restoreBackup(filename);
+            return ResponseEntity.ok("Restauración completada: " + filename);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Error interno al restaurar el backup.");
+        }
     }
 
     @Operation(summary = "Eliminar un backup por nombre de archivo")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Backup eliminado correctamente"),
-            @ApiResponse(responseCode = "404", description = "Backup no encontrado o ya eliminado")
+            @ApiResponse(responseCode = "404", description = "Backup no encontrado o ya eliminado"),
+            @ApiResponse(responseCode = "500", description = "Error interno del servidor")
     })
     @DeleteMapping("/{filename}")
     public ResponseEntity<?> eliminarBackup(
             @Parameter(description = "Nombre del archivo de backup a eliminar", required = true) @PathVariable String filename) {
-        boolean eliminado = backupService.deleteBackup(filename);
-        if (eliminado) {
-            return ResponseEntity.ok("Backup eliminado correctamente: " + filename);
-        } else {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("El backup no existe o ya fue eliminado.");
+        try {
+            boolean eliminado = backupService.deleteBackup(filename);
+            if (eliminado) {
+                return ResponseEntity.ok("Backup eliminado correctamente: " + filename);
+            } else {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body("El backup no existe o ya fue eliminado.");
+            }
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Error interno al eliminar el backup.");
         }
     }
 
     @Operation(summary = "Obtener un backup por nombre de archivo")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Backup encontrado y retornado"),
-            @ApiResponse(responseCode = "404", description = "Backup no encontrado")
+            @ApiResponse(responseCode = "200", description = "Backup encontrado y retornado", content = @Content(mediaType = "application/json", schema = @Schema(implementation = Backup.class))),
+            @ApiResponse(responseCode = "404", description = "Backup no encontrado"),
+            @ApiResponse(responseCode = "500", description = "Error interno del servidor")
     })
     @GetMapping("/{filename}")
     public ResponseEntity<Backup> obtenerBackup(
             @Parameter(description = "Nombre del archivo de backup a obtener", required = true) @PathVariable String filename) {
-        Backup backup = backupService.getBackup(filename);
-        if (backup != null) {
-            return ResponseEntity.ok(backup);
-        } else {
-            return ResponseEntity.notFound().build();
+        try {
+            Backup backup = backupService.getBackup(filename);
+            if (backup != null) {
+                return ResponseEntity.ok(backup);
+            } else {
+                return ResponseEntity.notFound().build();
+            }
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
 
     @Operation(summary = "Listar todos los archivos de backup")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Lista de archivos de backup retornada"),
-            @ApiResponse(responseCode = "204", description = "No hay archivos de backup disponibles")
+            @ApiResponse(responseCode = "200", description = "Lista de archivos de backup retornada", content = @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(type = "string")))),
+            @ApiResponse(responseCode = "204", description = "No hay archivos de backup disponibles"),
+            @ApiResponse(responseCode = "500", description = "Error interno del servidor")
     })
     @GetMapping
     public ResponseEntity<List<String>> listarBackups() {
-        List<String> backups = backupService.listBackupFiles();
-        if (backups.isEmpty()) {
-            return ResponseEntity.noContent().build();
+        try {
+            List<String> backups = backupService.listBackupFiles();
+            if (backups.isEmpty()) {
+                return ResponseEntity.noContent().build();
+            }
+            return ResponseEntity.ok(backups);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
-        return ResponseEntity.ok(backups);
     }
 
 }

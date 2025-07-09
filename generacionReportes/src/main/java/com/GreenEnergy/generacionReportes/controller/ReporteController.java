@@ -4,6 +4,7 @@ import com.GreenEnergy.generacionReportes.model.Reporte;
 import com.GreenEnergy.generacionReportes.service.ReporteService;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -19,6 +20,8 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 
@@ -55,10 +58,22 @@ public class ReporteController {
     }
 
     @Operation(summary = "Listar todos los reportes", description = "Obtiene la lista completa de reportes")
-    @ApiResponse(responseCode = "200", description = "Lista de reportes obtenida")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Lista de reportes obtenida", content = @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = Reporte.class)))),
+            @ApiResponse(responseCode = "204", description = "No hay reportes disponibles"),
+            @ApiResponse(responseCode = "500", description = "Error interno del servidor")
+    })
     @GetMapping
     public ResponseEntity<List<Reporte>> listarTodos() {
-        return ResponseEntity.ok(reporteService.listarReportes());
+        try {
+            List<Reporte> reportes = reporteService.listarReportes();
+            if (reportes.isEmpty()) {
+                return ResponseEntity.noContent().build();
+            }
+            return ResponseEntity.ok(reportes);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
     }
 
     @Operation(summary = "Buscar reportes por fecha de creación", description = "Obtiene reportes filtrando por fecha de creación en formato YYYY-MM-DD")
