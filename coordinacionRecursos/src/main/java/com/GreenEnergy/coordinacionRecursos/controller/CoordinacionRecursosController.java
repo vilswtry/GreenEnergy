@@ -105,9 +105,16 @@ public class CoordinacionRecursosController {
 
     @GetMapping("/materiales")
     @Operation(summary = "Listar todos los materiales")
-    @ApiResponse(responseCode = "200", description = "Lista de materiales obtenida exitosamente")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Lista de materiales obtenida exitosamente"),
+        @ApiResponse(responseCode = "204", description = "No hay materiales disponibles")
+    })
     public ResponseEntity<List<Material>> listarMateriales() {
-        return ResponseEntity.ok(coordinacionService.listarMateriales());
+        List<Material> materiales = coordinacionService.listarMateriales();
+        if(materiales.isEmpty()) {
+            return ResponseEntity.noContent().build();
+        }
+        return ResponseEntity.ok(materiales);
     }
 
     @GetMapping("/materiales/faltantes")

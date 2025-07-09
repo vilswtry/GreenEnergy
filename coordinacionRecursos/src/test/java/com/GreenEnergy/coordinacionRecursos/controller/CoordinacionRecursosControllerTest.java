@@ -82,6 +82,7 @@ public class CoordinacionRecursosControllerTest {
     @Test
     void obtenerMaterialesFaltantes_vacio() throws Exception {
         when(coordinacionService.listarMaterialesFaltantes()).thenReturn(Collections.emptyList());
+        
         mockMvc.perform(MockMvcRequestBuilders.get("/api/coordinacion/materiales/faltantes"))
                 .andExpect(status().isOk())
                 .andExpect(content().string("No hace falta reponer ningún material."));

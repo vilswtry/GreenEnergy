@@ -12,9 +12,12 @@ import com.GreenEnergy.backupRestoreService.model.EstadoSistema;
 import com.GreenEnergy.backupRestoreService.repository.EstadoSistemaRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.*;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 
+@ExtendWith(MockitoExtension.class)
 public class EstadoSistemaServiceTest {
 
     @InjectMocks
