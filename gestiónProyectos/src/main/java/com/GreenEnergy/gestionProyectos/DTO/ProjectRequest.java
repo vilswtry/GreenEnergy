@@ -13,6 +13,10 @@ import lombok.NoArgsConstructor;
 @Schema(name = "ProjectRequest", description = "DTO para crear un nuevo proyecto")
 public class ProjectRequest {
 
+    public ProjectRequest(String string, int i, LocalDate now, LocalDate plusDays, long l) {
+        //TODO Auto-generated constructor stub
+    }
+
     @Schema(description = "ID del proyecto", example = "1")
     private Long proyectoId;
 

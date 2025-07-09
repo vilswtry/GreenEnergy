@@ -70,7 +70,7 @@ public class NotificacionControllerTest {
         when(notificacionService.findNotificationsByUsuarioId(1L)).thenReturn(List.of());
         
         mockMvc.perform(get("/notificaciones/cliente/1"))
-            .andExpect(status().isOk());
+            .andExpect(status().isNoContent());
 }
 
     @Test
