@@ -47,6 +47,13 @@ public class TicketSoporteControllerTest {
     }
 
     @Test
+    void buscarPorEstado_conEstadoInvalido_deberiaResponder400() throws Exception {
+
+        mockMvc.perform(get("/soporte/tickets/estado/ESTADO_INVALIDO"))
+           .andExpect(status().isBadRequest());
+    }
+
+    @Test
     void crearTicket_debeResponder200() throws Exception {
         Usuario usuario = new Usuario();
         usuario.setId(1L);

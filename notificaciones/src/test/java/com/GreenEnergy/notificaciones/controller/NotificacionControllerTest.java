@@ -1,7 +1,9 @@
-package com.GreenEnergy.notificacionesPrueba.controller;
+package com.GreenEnergy.notificaciones.controller;
 
-import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,7 +12,6 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.web.servlet.MockMvc;
 
-import com.GreenEnergy.notificaciones.controller.NotificacionController;
 import com.GreenEnergy.notificaciones.model.Notificacion;
 import com.GreenEnergy.notificaciones.service.NotificacionService;
 
@@ -63,6 +64,14 @@ public class NotificacionControllerTest {
         mockMvc.perform(get("/notificaciones/cliente/1"))
                 .andExpect(status().isOk());
     }
+
+    @Test
+    void testObtenerNotificaciones_listaVacia() throws Exception {
+        when(notificacionService.findNotificationsByUsuarioId(1L)).thenReturn(List.of());
+        
+        mockMvc.perform(get("/notificaciones/cliente/1"))
+            .andExpect(status().isOk());
+}
 
     @Test
     void testNotificarCambioEstado() throws Exception {

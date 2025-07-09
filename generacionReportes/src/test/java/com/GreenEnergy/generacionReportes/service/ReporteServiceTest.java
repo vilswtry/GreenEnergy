@@ -15,9 +15,11 @@ import org.mockito.MockitoAnnotations;
 
 import java.time.LocalDate;
 import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 public class ReporteServiceTest {
@@ -98,6 +100,26 @@ public class ReporteServiceTest {
     }
 
     @Test
+    void crearReporte_proyectoInexistente_excepcion() {
+        when(proyectoRepository.findById(8L)).thenReturn(Optional.empty());
+
+        RuntimeException ex = assertThrows(RuntimeException.class,
+                () -> reporteService.crearReporte(8L, "PROYECTO", "", "", ""));
+
+        assertEquals("Proyecto no encontrado", ex.getMessage());
+    }
+
+    @Test
+    void crearReporte_mantencionInexistente_excepcion() {
+        when(mantencionRepository.findById(8L)).thenReturn(Optional.empty());
+
+        RuntimeException ex = assertThrows(RuntimeException.class,
+                () -> reporteService.crearReporte(8L, "MANTENCION", "", "", ""));
+
+        assertEquals("Mantención no encontrada", ex.getMessage());
+    }
+
+    @Test
     void buscarReportesPorFechaCreacion_conResultados() {
         LocalDate fecha = LocalDate.of(2025, 6, 1);
         when(reporteRepository.findByFechaCreacion(fecha)).thenReturn(Collections.singletonList(new Reporte()));
@@ -110,5 +132,22 @@ public class ReporteServiceTest {
         when(reporteRepository.findByIdProyectoMantencion(100L)).thenReturn(Collections.singletonList(new Reporte()));
 
         assertEquals(1, reporteService.buscarReportesPorProyectoId(100L).size());
+    }
+
+    @Test
+    void listarReeportes() {
+        Reporte reporte1 = new Reporte();
+        reporte1.setId(1L);
+
+        Reporte reporte2 = new Reporte();
+        reporte2.setId(2L);
+
+        when(reporteRepository.findAll()).thenReturn(List.of(reporte1, reporte2));
+
+        List<Reporte> resultado = reporteService.listarReportes();
+
+        assertEquals(2, resultado.size());
+        assertEquals(1L, resultado.get(0).getId());
+        assertEquals(2L, resultado.get(1).getId());
     }
 }

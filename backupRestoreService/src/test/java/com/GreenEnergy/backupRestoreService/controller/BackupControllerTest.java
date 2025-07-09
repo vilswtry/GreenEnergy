@@ -5,19 +5,20 @@ import com.GreenEnergy.backupRestoreService.service.BackupService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Date;
 
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@SpringBootTest
-@AutoConfigureMockMvc
+@WebMvcTest(BackupController.class)
 public class BackupControllerTest {
 
     @Autowired
@@ -63,11 +64,28 @@ public class BackupControllerTest {
     }
 
     @Test
+    void obtenerBackup_notFound() throws Exception {
+        String filename = "inexistente.sql";
+
+        when(backupService.getBackup(filename)).thenReturn(null);
+
+        mockMvc.perform(get("/backups/" + filename))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
     public void listarBackups_ok() throws Exception {
         when(backupService.listBackupFiles()).thenReturn(Arrays.asList("b1.sql", "b2.sql"));
 
         mockMvc.perform(get("/backups"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(2));
+    }
+
+    @Test
+    void listarBackups_vacio() throws Exception {
+        when(backupService.listBackupFiles()).thenReturn(Collections.emptyList());
+        mockMvc.perform(get("/backups"))
+        .andExpect(status().isNoContent());
     }
 }

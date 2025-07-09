@@ -33,11 +33,43 @@ public class CoordinacionRecursosControllerTest {
     }
 
     @Test
+    void asignarRecursos_OK() throws Exception {
+        String jsonRequest = """
+            {
+                "fechaInicio": "2025-07-10",
+                "fechaFin": "2025-07-15"
+            }
+        """;
+
+        mockMvc.perform(MockMvcRequestBuilders.post("/api/coordinacion/asignar")
+                .contentType("application/json")
+                .content(jsonRequest))
+                .andExpect(status().isOk())
+                .andExpect(content().string("Recursos asignados correctamente al proyecto."));
+    }
+
+    @Test
     void asignarRecursos_fechaInvalida() throws Exception {
         mockMvc.perform(MockMvcRequestBuilders.post("/api/coordinacion/asignar")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"proyectoId\":1,\"cantidadPaneles\":10}"))
                 .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void asignarRecursosMantencion_OK() throws Exception {
+        String jsonRequest = """
+            {
+                "fechaInicio": "2025-07-10",
+                "fechaFin": "2025-07-15"
+            }
+        """;
+
+        mockMvc.perform(MockMvcRequestBuilders.post("/api/coordinacion/asignar-mantencion")
+                .contentType("application/json")
+                .content(jsonRequest))
+                .andExpect(status().isOk())
+                .andExpect(content().string("Recursos de mantención asignados correctamente."));
     }
 
     @Test
@@ -53,5 +85,26 @@ public class CoordinacionRecursosControllerTest {
         mockMvc.perform(MockMvcRequestBuilders.get("/api/coordinacion/materiales/faltantes"))
                 .andExpect(status().isOk())
                 .andExpect(content().string("No hace falta reponer ningún material."));
+    }
+
+    @Test
+    void buscarMaterialPorCodigo_OK() throws Exception {
+        Material material = new Material(1L, "PS", "Panel Solar", "unidad", 15);
+        
+        when(coordinacionService.buscarMaterialPorCodigo("PS")).thenReturn(material);
+
+        mockMvc.perform(MockMvcRequestBuilders.get("/api/coordinacion/materiales/PS"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.codigoMaterial").value("PS"))
+                .andExpect(jsonPath("$.nombreMaterial").value("Panel Solar"));
+    }
+
+    @Test
+    void buscarMaterialPorCodigo_noExiste() throws Exception {
+        when(coordinacionService.buscarMaterialPorCodigo("XYZ")).thenThrow(new RuntimeException("Código inválido"));
+
+        mockMvc.perform(MockMvcRequestBuilders.get("/api/coordinacion/materiales/XYZ"))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().string("Código inválido"));
     }
 }

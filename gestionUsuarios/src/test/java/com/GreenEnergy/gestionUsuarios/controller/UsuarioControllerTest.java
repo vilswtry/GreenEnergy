@@ -267,6 +267,15 @@ public class UsuarioControllerTest {
 
     @Test
     @WithMockUser(roles = { "ADMINISTRADOR" })
+    void obtenerUsuarioPorId_notFound() throws Exception{
+        when(usuarioService.buscarPorId(7L)).thenThrow(new RuntimeException("no encontrado"));
+
+        mockMvc.perform(get("/api/usuarios/7"))
+        .andExpect(status().isNotFound());
+    }
+
+    @Test
+    @WithMockUser(roles = { "ADMINISTRADOR" })
     void listarUsuariosPorRol_deberiaRetornarUsuariosFiltradosYStatusOK() throws Exception {
         List<Usuario> usuarios = Arrays.asList(
                 new Usuario(2L, "Ana", "Gomez", "98765432-1", "ana@example.com", "+56987654321", "pass", Rol.TECNICO,

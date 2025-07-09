@@ -1,4 +1,4 @@
-package com.GreenEnergy.notificacionesPrueba.service;
+package com.GreenEnergy.notificaciones.service;
 
 import static org.mockito.Mockito.*;
 import static org.assertj.core.api.Assertions.*;
@@ -18,7 +18,6 @@ import com.GreenEnergy.notificaciones.model.Notificacion;
 import com.GreenEnergy.notificaciones.model.Usuario;
 import com.GreenEnergy.notificaciones.repository.NotificacionRepository;
 import com.GreenEnergy.notificaciones.repository.UsuarioRepository;
-import com.GreenEnergy.notificaciones.service.NotificacionService;
 
 @ExtendWith(MockitoExtension.class)
 public class NotificacionServiceTest {
