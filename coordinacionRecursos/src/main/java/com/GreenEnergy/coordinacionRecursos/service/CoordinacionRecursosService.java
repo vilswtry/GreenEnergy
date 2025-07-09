@@ -12,14 +12,15 @@ import org.springframework.web.server.ResponseStatusException;
 
 import com.GreenEnergy.coordinacionRecursos.DTO.MantencionRequest;
 import com.GreenEnergy.coordinacionRecursos.DTO.ProjectRequest;
+import com.GreenEnergy.coordinacionRecursos.model.Especialidad;
 import com.GreenEnergy.coordinacionRecursos.model.Material;
 import com.GreenEnergy.coordinacionRecursos.model.MaterialAsignadoMantencion;
 import com.GreenEnergy.coordinacionRecursos.model.MaterialAsignadoProyecto;
-import com.GreenEnergy.coordinacionRecursos.model.Tecnico;
+import com.GreenEnergy.coordinacionRecursos.model.Usuario;
 import com.GreenEnergy.coordinacionRecursos.repository.MaterialAsignadoMantencionRepository;
 import com.GreenEnergy.coordinacionRecursos.repository.MaterialAsignadoProyectoRepository;
 import com.GreenEnergy.coordinacionRecursos.repository.MaterialRepository;
-import com.GreenEnergy.coordinacionRecursos.repository.TecnicoRepository;
+import com.GreenEnergy.coordinacionRecursos.repository.UsuarioRepository;
 
 import jakarta.transaction.Transactional;
 
@@ -31,7 +32,7 @@ public class CoordinacionRecursosService {
     private MaterialRepository materialRepository;
 
     @Autowired
-    private TecnicoRepository tecnicoRepository;
+    private UsuarioRepository usuarioRepository;
 
     @Autowired
     private MaterialAsignadoProyectoRepository maProyectoRepository;
@@ -106,21 +107,24 @@ public class CoordinacionRecursosService {
     }
 
     private void asignarTecnicos(LocalDate fechaInicio, LocalDate fechaFin) {
-        List<String> especialidades = List.of("electricista", "instalador fotovoltaico",
-                "instalador de estructura", "ayudante tecnico");
+        List<Especialidad> especialidades = List.of(
+                Especialidad.ELECTRICISTA,
+                Especialidad.INSTALADOR_FOTOVOLTAICO,
+                Especialidad.INSTALADOR_DE_ESTRUCTURA,
+                Especialidad.AYUDANTE_TECNICO);
 
         List<LocalDate> fechas = fechaInicio.datesUntil(fechaFin.plusDays(1)).toList();
 
-        for (String especialidad : especialidades) {
+        for (Especialidad especialidad : especialidades) {
             for (LocalDate fecha : fechas) {
-                List<Tecnico> disponibles = tecnicoRepository.findByEspecialidadAndFechaDisponible(especialidad, fecha);
+                List<Usuario> disponibles = usuarioRepository.findByEspecialidadAndFechaDisponible(especialidad, fecha);
                 if (disponibles.isEmpty()) {
-                    throw new RuntimeException("No hay suficientes técnicos disponibles de la especialidad "
-                            + especialidad + " para la fecha " + fecha);
+                    throw new RuntimeException("No hay técnicos disponibles de la especialidad "
+                            + especialidad.name() + " para la fecha " + fecha);
                 }
-                Tecnico seleccionado = disponibles.get(0);
+                Usuario seleccionado = disponibles.get(0);
                 seleccionado.getFechasOcupadas().add(fecha);
-                tecnicoRepository.save(seleccionado);
+                usuarioRepository.save(seleccionado);
             }
         }
     }
@@ -154,27 +158,32 @@ public class CoordinacionRecursosService {
             maMantencionRepository.save(asignacion);
         }
 
-        List<Tecnico> electricistasDisponibles = tecnicoRepository.findByEspecialidadAndFechaDisponible("electricista",
-                fecha);
+        List<Usuario> electricistasDisponibles = usuarioRepository
+                .findByEspecialidadAndFechaDisponible(Especialidad.ELECTRICISTA, fecha);
+
         if (electricistasDisponibles.isEmpty()) {
             throw new RuntimeException("No hay electricistas disponibles para la fecha indicada.");
         }
-        Tecnico electricista = electricistasDisponibles.get(0);
+
+        Usuario electricista = electricistasDisponibles.get(0);
         electricista.getFechasOcupadas().add(fecha);
-        tecnicoRepository.save(electricista);
+        usuarioRepository.save(electricista);
 
         int tecnicosLimpiezaNecesarios = (int) Math.ceil(paneles / 10.0);
 
-        List<Tecnico> limpiezaDisponibles = tecnicoRepository
-                .findByEspecialidadAndFechaDisponible("limpieza de paneles", fecha);
+        List<Usuario> limpiezaDisponibles = usuarioRepository
+                .findByEspecialidadAndFechaDisponible(Especialidad.LIMPIEZA_DE_PANELES, fecha);
+
         if (limpiezaDisponibles.size() < tecnicosLimpiezaNecesarios) {
             throw new RuntimeException("No hay suficientes técnicos de limpieza disponibles para la fecha indicada.");
         }
+
         for (int i = 0; i < tecnicosLimpiezaNecesarios; i++) {
-            Tecnico t = limpiezaDisponibles.get(i);
+            Usuario t = limpiezaDisponibles.get(i);
             t.getFechasOcupadas().add(fecha);
-            tecnicoRepository.save(t);
+            usuarioRepository.save(t);
         }
+
     }
 
     public void devolverMaterialesProyecto(Long proyectoId) {

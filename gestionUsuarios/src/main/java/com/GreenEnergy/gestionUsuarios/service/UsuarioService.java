@@ -6,14 +6,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import com.GreenEnergy.gestionUsuarios.model.Administrador;
-import com.GreenEnergy.gestionUsuarios.model.Cliente;
 import com.GreenEnergy.gestionUsuarios.model.Rol;
-import com.GreenEnergy.gestionUsuarios.model.Tecnico;
-import com.GreenEnergy.gestionUsuarios.model.TecnicoSoporte;
 import com.GreenEnergy.gestionUsuarios.model.Usuario;
 import com.GreenEnergy.gestionUsuarios.repository.UsuarioRepository;
 
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 
 @Transactional
@@ -65,11 +62,8 @@ public class UsuarioService {
         }
 
         usuario.setRol(Rol.CLIENTE);
-        usuario.setPassword(passwordEncoder.encode(usuario.getPassword()));
 
-        Cliente cliente = new Cliente();
-        cliente.setUsuario(usuario);
-        usuario.setCliente(cliente);
+        usuario.setPassword(passwordEncoder.encode(usuario.getPassword()));
 
         return usuarioRepository.save(usuario);
     }
@@ -106,31 +100,12 @@ public class UsuarioService {
             throw new IllegalArgumentException("La contraseña debe tener más de 7 caracteres.");
         }
 
-        if (usuario.getTecnico() == null || usuario.getTecnico().getEspecialidad() == null) {
+        if (usuario.getEspecialidad() == null) {
             throw new IllegalArgumentException("Debe especificar una especialidad.");
-        }
-
-        String especialidad = usuario.getTecnico().getEspecialidad().toLowerCase().trim();
-
-        List<String> especialidadesValidas = List.of(
-                "electricista",
-                "instalador fotovoltaico",
-                "instalador de estructura",
-                "ayudante tecnico",
-                "limpieza de paneles");
-
-        if (!especialidadesValidas.contains(especialidad)) {
-            throw new IllegalArgumentException(
-                    "Especialidad inválida. Debe ser una de: " + String.join(", ", especialidadesValidas));
         }
 
         usuario.setRol(Rol.TECNICO);
         usuario.setPassword(passwordEncoder.encode(usuario.getPassword()));
-
-        Tecnico tecnico = new Tecnico();
-        tecnico.setUsuario(usuario);
-        tecnico.setEspecialidad(especialidad);
-        usuario.setTecnico(tecnico);
 
         return usuarioRepository.save(usuario);
     }
@@ -173,10 +148,6 @@ public class UsuarioService {
 
         usuario.setRol(Rol.TECNICO_SOPORTE);
         usuario.setPassword(passwordEncoder.encode(usuario.getPassword()));
-
-        TecnicoSoporte tecnicoSoporte = new TecnicoSoporte();
-        tecnicoSoporte.setUsuario(usuario);
-        usuario.setTecnicoSoporte(tecnicoSoporte);
 
         return usuarioRepository.save(usuario);
     }
@@ -221,10 +192,6 @@ public class UsuarioService {
         usuario.setRol(Rol.ADMINISTRADOR);
         usuario.setPassword(passwordEncoder.encode(usuario.getPassword()));
 
-        Administrador administrador = new Administrador();
-        administrador.setUsuario(usuario);
-        usuario.setAdministrador(administrador);
-
         return usuarioRepository.save(usuario);
     }
 
@@ -237,10 +204,10 @@ public class UsuarioService {
         }
 
         Usuario usuario = usuarioRepository.findByEmail(email.trim().toLowerCase())
-                .orElseThrow(() -> new RuntimeException("Email no encontrado."));
+                .orElseThrow(() -> new RuntimeException("Email o contraseña inválidos."));
 
         if (!passwordEncoder.matches(password, usuario.getPassword())) {
-            throw new RuntimeException("Contraseña inválida.");
+            throw new RuntimeException("Email o contraseña inválidos.");
         }
 
         return usuario;
@@ -250,7 +217,7 @@ public class UsuarioService {
 
     public Usuario actualizarDatos(Long id, Usuario nuevosDatos) {
         Usuario usuario = usuarioRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado con ID: " + id));
 
         if (nuevosDatos.getNombre() != null && !nuevosDatos.getNombre().isBlank()) {
             usuario.setNombre(nuevosDatos.getNombre());
@@ -260,24 +227,35 @@ public class UsuarioService {
             usuario.setApellido(nuevosDatos.getApellido());
         }
 
+        if (nuevosDatos.getRut() != null && !nuevosDatos.getRut().isBlank()) {
+            if (usuarioRepository.findByRut(nuevosDatos.getRut()).isPresent()
+                    && !usuario.getRut().equals(nuevosDatos.getRut())) {
+                throw new IllegalArgumentException("El RUT ya está registrado.");
+            }
+            usuario.setRut(nuevosDatos.getRut());
+        }
+
+        if (nuevosDatos.getEmail() != null && !nuevosDatos.getEmail().isBlank()) {
+            if (usuarioRepository.findByEmail(nuevosDatos.getEmail()).isPresent()
+                    && !usuario.getEmail().equals(nuevosDatos.getEmail())) {
+                throw new IllegalArgumentException("El email ya está registrado.");
+            }
+            usuario.setEmail(nuevosDatos.getEmail());
+        }
+
         if (nuevosDatos.getTelefono() != null && !nuevosDatos.getTelefono().isBlank()) {
             usuario.setTelefono(nuevosDatos.getTelefono());
         }
 
-        if (nuevosDatos.getEmail() != null && !nuevosDatos.getEmail().isBlank()) {
-            String emailNuevo = nuevosDatos.getEmail().trim().toLowerCase();
-
-            usuarioRepository.findByEmail(emailNuevo).ifPresent(otroUsuario -> {
-                if (!otroUsuario.getId().equals(id)) {
-                    throw new IllegalArgumentException("El email ya existe.");
-                }
-            });
-
-            usuario.setEmail(emailNuevo);
+        if (nuevosDatos.getPassword() != null && !nuevosDatos.getPassword().isBlank()) {
+            if (nuevosDatos.getPassword().length() <= 7) {
+                throw new IllegalArgumentException("La contraseña debe tener más de 7 caracteres.");
+            }
+            usuario.setPassword(passwordEncoder.encode(nuevosDatos.getPassword()));
         }
 
-        if (nuevosDatos.getPassword() != null && !nuevosDatos.getPassword().isBlank()) {
-            usuario.setPassword(passwordEncoder.encode(nuevosDatos.getPassword()));
+        if (nuevosDatos.getEspecialidad() != null) {
+            usuario.setEspecialidad(nuevosDatos.getEspecialidad());
         }
 
         return usuarioRepository.save(usuario);
@@ -296,7 +274,7 @@ public class UsuarioService {
 
     public Usuario buscarPorId(Long id) {
         return usuarioRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Usuario no encontrado con ID: " + id));
+                .orElseThrow(() -> new EntityNotFoundException("Usuario no encontrado con ID: " + id));
     }
 
     public List<Usuario> listarUsuarios() {
@@ -304,10 +282,7 @@ public class UsuarioService {
     }
 
     public List<Usuario> listarPorRol(Rol rol) {
-        return usuarioRepository.findAll()
-                .stream()
-                .filter(usuario -> usuario.getRol() == rol)
-                .toList();
+        return usuarioRepository.findByRol(rol);
     }
 
 }

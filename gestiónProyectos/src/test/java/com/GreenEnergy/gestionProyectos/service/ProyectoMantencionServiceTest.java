@@ -13,6 +13,7 @@ import com.GreenEnergy.gestionProyectos.DTO.ProjectUpdateRequest;
 import com.GreenEnergy.gestionProyectos.model.*;
 import com.GreenEnergy.gestionProyectos.repository.MantencionRepository;
 import com.GreenEnergy.gestionProyectos.repository.ProyectoRepository;
+import com.GreenEnergy.gestionProyectos.repository.UsuarioRepository;
 import com.GreenEnergy.gestionProyectos.webclient.CoordinacionClient;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -31,6 +32,9 @@ class ProyectoMantencionServiceTest {
     private MantencionRepository mantencionRepository;
 
     @Mock
+    private UsuarioRepository usuarioRepository;
+
+    @Mock
     private CoordinacionClient coordinacionClient;
 
     @InjectMocks
@@ -44,30 +48,56 @@ class ProyectoMantencionServiceTest {
         MockitoAnnotations.openMocks(this);
 
         proyecto = new Proyecto(1L, "Proyecto A", 10, LocalDate.now(), LocalDate.now().plusDays(10),
-                Proyecto.EstadoProyecto.CREADO, false);
+                Proyecto.EstadoProyecto.CREADO, false, 5L);
 
         mantencion = new Mantencion(1L, "Mantencion A", LocalDate.now().plusDays(5), 5,
-                Mantencion.EstadoMantencion.CREADO, false);
+                Mantencion.EstadoMantencion.CREADO, false, 5L);
     }
 
     @Test
     void crearProyecto_existenteConRecursosAsignados() {
-        ProjectRequest req = new ProjectRequest(null, "Proyecto A", 10, LocalDate.now(), LocalDate.now().plusDays(10));
+        ProjectRequest req = new ProjectRequest();
+        req.setProyectoId(null);
+        req.setNombre("Proyecto A");
+        req.setCantidadPaneles(10);
+        req.setFechaInicio(LocalDate.now());
+        req.setFechaFin(LocalDate.now().plusDays(10));
+        req.setClienteId(5L);
+
+        Usuario usuario = new Usuario();
+        usuario.setId(5L);
+        usuario.setRol(Rol.CLIENTE);
+        when(usuarioRepository.findById(5L)).thenReturn(Optional.of(usuario));
+
+        proyecto.setRecursosAsignados(true);
         when(proyectoRepository.findByNombreAndFechaInicioAndFechaFin(anyString(), any(), any()))
                 .thenReturn(Optional.of(proyecto));
-        proyecto.setRecursosAsignados(true);
 
         RuntimeException ex = assertThrows(RuntimeException.class, () -> service.crearProyecto(req));
+        System.out.println("Mensaje excepción capturado: '" + ex.getMessage() + "'");
         assertTrue(ex.getMessage().contains("Ya existe un proyecto igual con recursos asignados."));
     }
 
     @Test
     void crearProyecto_existenteSinRecursosAsignados_asignacionExitosa() {
-        ProjectRequest req = new ProjectRequest(null, "Proyecto A", 10, LocalDate.now(), LocalDate.now().plusDays(10));
+        ProjectRequest req = new ProjectRequest();
+        req.setProyectoId(null);
+        req.setNombre("Proyecto A");
+        req.setCantidadPaneles(10);
+        req.setFechaInicio(LocalDate.now());
+        req.setFechaFin(LocalDate.now().plusDays(10));
+        req.setClienteId(5L);
+
+        Usuario usuario = new Usuario();
+        usuario.setId(5L);
+        usuario.setRol(Rol.CLIENTE);
+        when(usuarioRepository.findById(5L)).thenReturn(Optional.of(usuario));
+
         proyecto.setRecursosAsignados(false);
         proyecto.setEstado(Proyecto.EstadoProyecto.CREADO);
         when(proyectoRepository.findByNombreAndFechaInicioAndFechaFin(anyString(), any(), any()))
                 .thenReturn(Optional.of(proyecto));
+
         doNothing().when(coordinacionClient).asignarRecursos(any());
         when(proyectoRepository.save(any())).thenAnswer(i -> i.getArgument(0));
 
@@ -79,11 +109,24 @@ class ProyectoMantencionServiceTest {
 
     @Test
     void crearProyecto_existenteSinRecursosAsignados_errorAsignacion() {
-        ProjectRequest req = new ProjectRequest(null, "Proyecto A", 10, LocalDate.now(), LocalDate.now().plusDays(10));
+        ProjectRequest req = new ProjectRequest();
+        req.setProyectoId(null);
+        req.setNombre("Proyecto A");
+        req.setCantidadPaneles(10);
+        req.setFechaInicio(LocalDate.now());
+        req.setFechaFin(LocalDate.now().plusDays(10));
+        req.setClienteId(5L);
+
+        Usuario usuario = new Usuario();
+        usuario.setId(5L);
+        usuario.setRol(Rol.CLIENTE);
+        when(usuarioRepository.findById(5L)).thenReturn(Optional.of(usuario));
+
         proyecto.setRecursosAsignados(false);
         proyecto.setEstado(Proyecto.EstadoProyecto.CREADO);
         when(proyectoRepository.findByNombreAndFechaInicioAndFechaFin(anyString(), any(), any()))
                 .thenReturn(Optional.of(proyecto));
+
         doThrow(new RuntimeException("Falló asignación")).when(coordinacionClient).asignarRecursos(any());
 
         RuntimeException ex = assertThrows(RuntimeException.class, () -> service.crearProyecto(req));
@@ -93,18 +136,32 @@ class ProyectoMantencionServiceTest {
 
     @Test
     void crearProyecto_nuevoProyecto_asignacionExitosa() {
-        ProjectRequest req = new ProjectRequest(null, "Proyecto Nuevo", 15, LocalDate.now(),
-                LocalDate.now().plusDays(15));
+        ProjectRequest req = new ProjectRequest();
+        req.setProyectoId(null);
+        req.setNombre("Proyecto Nuevo");
+        req.setCantidadPaneles(15);
+        req.setFechaInicio(LocalDate.now());
+        req.setFechaFin(LocalDate.now().plusDays(15));
+        req.setClienteId(5L);
+
+        Usuario usuario = new Usuario();
+        usuario.setId(5L);
+        usuario.setRol(Rol.CLIENTE);
+        when(usuarioRepository.findById(5L)).thenReturn(Optional.of(usuario));
+
         when(proyectoRepository.findByNombreAndFechaInicioAndFechaFin(anyString(), any(), any()))
                 .thenReturn(Optional.empty());
+
         when(proyectoRepository.save(any())).thenAnswer(i -> {
             Proyecto p = i.getArgument(0);
             p.setId(2L);
             return p;
         });
+
         doNothing().when(coordinacionClient).asignarRecursos(any());
 
         Proyecto result = service.crearProyecto(req);
+
         assertNotNull(result.getId());
         assertTrue(result.isRecursosAsignados());
         assertEquals(Proyecto.EstadoProyecto.EN_PROGRESO, result.getEstado());
@@ -112,15 +169,28 @@ class ProyectoMantencionServiceTest {
 
     @Test
     void crearProyecto_nuevoProyecto_errorAsignacion() {
-        ProjectRequest req = new ProjectRequest(null, "Proyecto Nuevo", 15, LocalDate.now(),
-                LocalDate.now().plusDays(15));
+        ProjectRequest req = new ProjectRequest();
+        req.setProyectoId(null);
+        req.setNombre("Proyecto Nuevo");
+        req.setCantidadPaneles(15);
+        req.setFechaInicio(LocalDate.now());
+        req.setFechaFin(LocalDate.now().plusDays(15));
+        req.setClienteId(5L);
+
+        Usuario usuario = new Usuario();
+        usuario.setId(5L);
+        usuario.setRol(Rol.CLIENTE);
+        when(usuarioRepository.findById(5L)).thenReturn(Optional.of(usuario));
+
         when(proyectoRepository.findByNombreAndFechaInicioAndFechaFin(anyString(), any(), any()))
                 .thenReturn(Optional.empty());
+
         when(proyectoRepository.save(any())).thenAnswer(i -> {
             Proyecto p = i.getArgument(0);
             p.setId(2L);
             return p;
         });
+
         doThrow(new RuntimeException("Falló asignación")).when(coordinacionClient).asignarRecursos(any());
 
         RuntimeException ex = assertThrows(RuntimeException.class, () -> service.crearProyecto(req));
@@ -129,10 +199,21 @@ class ProyectoMantencionServiceTest {
 
     @Test
     void crearMantencion_existenteConRecursosAsignados() {
-        MantencionRequest req = new MantencionRequest(null, "Mantencion A", LocalDate.now().plusDays(5), 5);
+        MantencionRequest req = new MantencionRequest();
+        req.setMantencionId(null);
+        req.setNombre("Mantencion A");
+        req.setFechaMantencion(LocalDate.now().plusDays(5));
+        req.setCantidadPaneles(5);
+        req.setClienteId(5L);
+
+        Usuario usuario = new Usuario();
+        usuario.setId(5L);
+        usuario.setRol(Rol.CLIENTE);
+        when(usuarioRepository.findById(5L)).thenReturn(Optional.of(usuario));
+
+        mantencion.setRecursosAsignados(true);
         when(mantencionRepository.findByNombreAndFechaMantencion(anyString(), any()))
                 .thenReturn(Optional.of(mantencion));
-        mantencion.setRecursosAsignados(true);
 
         RuntimeException ex = assertThrows(RuntimeException.class, () -> service.crearMantencion(req));
         assertTrue(
@@ -141,7 +222,18 @@ class ProyectoMantencionServiceTest {
 
     @Test
     void crearMantencion_existenteSinRecursosAsignados_asignacionExitosa() {
-        MantencionRequest req = new MantencionRequest(null, "Mantencion A", LocalDate.now().plusDays(5), 5);
+        MantencionRequest req = new MantencionRequest();
+        req.setMantencionId(null);
+        req.setNombre("Mantencion A");
+        req.setFechaMantencion(LocalDate.now().plusDays(5));
+        req.setCantidadPaneles(5);
+        req.setClienteId(5L);
+
+        Usuario usuario = new Usuario();
+        usuario.setId(5L);
+        usuario.setRol(Rol.CLIENTE);
+        when(usuarioRepository.findById(5L)).thenReturn(Optional.of(usuario));
+
         mantencion.setRecursosAsignados(false);
         mantencion.setEstado(Mantencion.EstadoMantencion.CREADO);
         when(mantencionRepository.findByNombreAndFechaMantencion(anyString(), any()))
@@ -157,7 +249,18 @@ class ProyectoMantencionServiceTest {
 
     @Test
     void crearMantencion_existenteSinRecursosAsignados_errorAsignacion() {
-        MantencionRequest req = new MantencionRequest(null, "Mantencion A", LocalDate.now().plusDays(5), 5);
+        MantencionRequest req = new MantencionRequest();
+        req.setMantencionId(null);
+        req.setNombre("Mantencion A");
+        req.setFechaMantencion(LocalDate.now().plusDays(5));
+        req.setCantidadPaneles(5);
+        req.setClienteId(5L);
+
+        Usuario usuario = new Usuario();
+        usuario.setId(5L);
+        usuario.setRol(Rol.CLIENTE);
+        when(usuarioRepository.findById(5L)).thenReturn(Optional.of(usuario));
+
         mantencion.setRecursosAsignados(false);
         mantencion.setEstado(Mantencion.EstadoMantencion.CREADO);
         when(mantencionRepository.findByNombreAndFechaMantencion(anyString(), any()))
@@ -171,7 +274,18 @@ class ProyectoMantencionServiceTest {
 
     @Test
     void crearMantencion_nuevaMantencion_asignacionExitosa() {
-        MantencionRequest req = new MantencionRequest(null, "Mantencion Nueva", LocalDate.now().plusDays(7), 7);
+        MantencionRequest req = new MantencionRequest();
+        req.setMantencionId(null);
+        req.setNombre("Mantencion Nueva");
+        req.setFechaMantencion(LocalDate.now().plusDays(7));
+        req.setCantidadPaneles(7);
+        req.setClienteId(5L);
+
+        Usuario usuario = new Usuario();
+        usuario.setId(5L);
+        usuario.setRol(Rol.CLIENTE);
+        when(usuarioRepository.findById(5L)).thenReturn(Optional.of(usuario));
+
         when(mantencionRepository.findByNombreAndFechaMantencion(anyString(), any()))
                 .thenReturn(Optional.empty());
         when(mantencionRepository.save(any())).thenAnswer(i -> {
@@ -189,7 +303,18 @@ class ProyectoMantencionServiceTest {
 
     @Test
     void crearMantencion_nuevaMantencion_errorAsignacion() {
-        MantencionRequest req = new MantencionRequest(null, "Mantencion Nueva", LocalDate.now().plusDays(7), 7);
+        MantencionRequest req = new MantencionRequest();
+        req.setMantencionId(null);
+        req.setNombre("Mantencion Nueva");
+        req.setFechaMantencion(LocalDate.now().plusDays(7));
+        req.setCantidadPaneles(7);
+        req.setClienteId(5L);
+
+        Usuario usuario = new Usuario();
+        usuario.setId(5L);
+        usuario.setRol(Rol.CLIENTE);
+        when(usuarioRepository.findById(5L)).thenReturn(Optional.of(usuario));
+
         when(mantencionRepository.findByNombreAndFechaMantencion(anyString(), any()))
                 .thenReturn(Optional.empty());
         when(mantencionRepository.save(any())).thenAnswer(i -> {

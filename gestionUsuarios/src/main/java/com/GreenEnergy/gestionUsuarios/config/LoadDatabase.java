@@ -8,11 +8,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
-import com.GreenEnergy.gestionUsuarios.model.Administrador;
-import com.GreenEnergy.gestionUsuarios.model.Cliente;
+import com.GreenEnergy.gestionUsuarios.model.Especialidad;
 import com.GreenEnergy.gestionUsuarios.model.Rol;
-import com.GreenEnergy.gestionUsuarios.model.Tecnico;
-import com.GreenEnergy.gestionUsuarios.model.TecnicoSoporte;
 import com.GreenEnergy.gestionUsuarios.model.Usuario;
 import com.GreenEnergy.gestionUsuarios.repository.UsuarioRepository;
 
@@ -33,10 +30,6 @@ public class LoadDatabase {
                 admin.setRol(Rol.ADMINISTRADOR);
                 admin.setPassword(passwordEncoder.encode("admin123"));
 
-                Administrador administrador = new Administrador();
-                administrador.setUsuario(admin);
-                admin.setAdministrador(administrador);
-
                 usuarioRepository.save(admin);
                 System.out.println("Usuario admin creado");
             } else {
@@ -54,10 +47,6 @@ public class LoadDatabase {
                     soporte.setTelefono("+5692222222" + i);
                     soporte.setRol(Rol.TECNICO_SOPORTE);
                     soporte.setPassword(passwordEncoder.encode("soporte123"));
-
-                    TecnicoSoporte ts = new TecnicoSoporte();
-                    ts.setUsuario(soporte);
-                    soporte.setTecnicoSoporte(ts);
 
                     usuarioRepository.save(soporte);
                 }
@@ -82,12 +71,11 @@ public class LoadDatabase {
                         tecnico.setEmail(email);
                         tecnico.setTelefono("+5693333333" + i);
                         tecnico.setRol(Rol.TECNICO);
-                        tecnico.setPassword(passwordEncoder.encode("tecnico123"));
 
-                        Tecnico t = new Tecnico();
-                        t.setUsuario(tecnico);
-                        t.setEspecialidad(especialidad);
-                        tecnico.setTecnico(t);
+                        String especialidadEnumStr = especialidad.toUpperCase().replace(" ", "_");
+                        tecnico.setEspecialidad(Especialidad.valueOf(especialidadEnumStr));
+
+                        tecnico.setPassword(passwordEncoder.encode("tecnico123"));
 
                         usuarioRepository.save(tecnico);
                     }
@@ -96,6 +84,7 @@ public class LoadDatabase {
 
             System.out.println("Técnicos de soporte y técnicos especializados cargados.");
 
+            System.out.println("Cargando clientes");
             for (int i = 1; i <= 5; i++) {
                 String email = "cliente" + i + "@greenenergy.cl";
                 if (usuarioRepository.findByEmail(email).isEmpty()) {
@@ -107,16 +96,19 @@ public class LoadDatabase {
                     cliente.setTelefono("+5694444444" + i);
                     cliente.setRol(Rol.CLIENTE);
                     cliente.setPassword(passwordEncoder.encode("cliente123"));
+                    cliente.setEspecialidad(null);
 
-                    Cliente cli = new Cliente();
-                    cli.setUsuario(cliente);
-                    cliente.setCliente(cli);
-
-                    usuarioRepository.save(cliente);
+                    try {
+                        usuarioRepository.save(cliente);
+                        System.out.println("Cliente creado: " + email);
+                    } catch (Exception e) {
+                        System.err.println("Error al guardar cliente " + email + ": " + e.getMessage());
+                    }
+                } else {
+                    System.out.println("Cliente ya existe: " + email);
                 }
             }
 
-            System.out.println("Clientes cargados.");
         };
     }
 

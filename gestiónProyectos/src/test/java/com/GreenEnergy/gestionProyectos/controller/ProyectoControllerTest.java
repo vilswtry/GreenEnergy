@@ -1,6 +1,7 @@
 package com.GreenEnergy.gestionProyectos.controller;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 import java.time.LocalDate;
@@ -33,50 +34,80 @@ class ProyectoControllerTest {
         MockitoAnnotations.openMocks(this);
 
         proyecto = new Proyecto(1L, "Proyecto A", 10, LocalDate.now(), LocalDate.now().plusDays(10),
-                Proyecto.EstadoProyecto.CREADO, false);
+                Proyecto.EstadoProyecto.CREADO, false, 5L);
 
         mantencion = new Mantencion(1L, "Mantencion A", LocalDate.now().plusDays(5), 5,
-                Mantencion.EstadoMantencion.CREADO, false);
+                Mantencion.EstadoMantencion.CREADO, false, 5l);
     }
 
     @Test
     void crearProyecto_exitoso() {
-        ProjectRequest request = new ProjectRequest(null, "Proyecto A", 10, LocalDate.now(),
-                LocalDate.now().plusDays(10));
+        Long clienteId = 5L;
+
+        ProjectRequest request = new ProjectRequest();
+        request.setNombre("Proyecto A");
+        request.setCantidadPaneles(10);
+        request.setFechaInicio(LocalDate.now());
+        request.setFechaFin(LocalDate.now().plusDays(10));
+        request.setClienteId(clienteId);
+
+        proyecto.setClienteId(clienteId);
+
         when(service.crearProyecto(any())).thenReturn(proyecto);
 
         ResponseEntity<?> response = controller.crearProyecto(request);
+
         assertEquals(201, response.getStatusCodeValue());
         assertTrue(response.getBody() instanceof Proyecto);
+        Proyecto resultado = (Proyecto) response.getBody();
+        assertEquals(clienteId, resultado.getClienteId());
     }
 
     @Test
     void crearProyecto_errorAsignacion() {
-        ProjectRequest request = new ProjectRequest(null, "Proyecto A", 10, LocalDate.now(),
-                LocalDate.now().plusDays(10));
+        ProjectRequest request = new ProjectRequest();
+        request.setNombre("Proyecto A");
+        request.setCantidadPaneles(10);
+        request.setFechaInicio(LocalDate.now());
+        request.setFechaFin(LocalDate.now().plusDays(10));
+        request.setClienteId(1L);
+
         when(service.crearProyecto(any())).thenThrow(new RuntimeException("Error asignando recursos"));
 
         ResponseEntity<?> response = controller.crearProyecto(request);
+
         assertEquals(400, response.getStatusCodeValue());
         assertTrue(response.getBody().toString().contains("Error asignando recursos"));
     }
 
     @Test
     void crearMantencion_exitoso() {
-        MantencionRequest request = new MantencionRequest(null, "Mantencion A", LocalDate.now().plusDays(5), 5);
+        MantencionRequest request = new MantencionRequest();
+        request.setNombre("Mantencion A");
+        request.setFechaMantencion(LocalDate.now().plusDays(5));
+        request.setCantidadPaneles(5);
+        request.setClienteId(1L);
+
         when(service.crearMantencion(any())).thenReturn(mantencion);
 
         ResponseEntity<?> response = controller.crearMantencion(request);
+
         assertEquals(201, response.getStatusCodeValue());
         assertTrue(response.getBody() instanceof Mantencion);
     }
 
     @Test
     void crearMantencion_errorAsignacion() {
-        MantencionRequest request = new MantencionRequest(null, "Mantencion A", LocalDate.now().plusDays(5), 5);
+        MantencionRequest request = new MantencionRequest();
+        request.setNombre("Mantencion A");
+        request.setFechaMantencion(LocalDate.now().plusDays(5));
+        request.setCantidadPaneles(5);
+        request.setClienteId(1L);
+
         when(service.crearMantencion(any())).thenThrow(new RuntimeException("Error asignando recursos"));
 
         ResponseEntity<?> response = controller.crearMantencion(request);
+
         assertEquals(400, response.getStatusCodeValue());
         assertTrue(response.getBody().toString().contains("Error asignando recursos"));
     }

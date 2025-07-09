@@ -44,7 +44,6 @@ public class UsuarioServiceTest {
         usuarioBase.setPassword("password123");
     }
 
-
     @Test
     void registrarCliente_ok() {
         usuarioBase.setRol(null);
@@ -57,7 +56,6 @@ public class UsuarioServiceTest {
 
         assertThat(registrado.getRol()).isEqualTo(Rol.CLIENTE);
         assertThat(registrado.getPassword()).isEqualTo("encodedPass");
-        assertThat(registrado.getCliente()).isNotNull();
         verify(usuarioRepository).save(any(Usuario.class));
     }
 
@@ -77,13 +75,10 @@ public class UsuarioServiceTest {
         assertThat(ex.getMessage()).isEqualTo("El RUT ya está registrado.");
     }
 
-
     @Test
     void registrarTecnico_ok() {
         usuarioBase.setRol(null);
-        Tecnico tecnico = new Tecnico();
-        tecnico.setEspecialidad("electricista");
-        usuarioBase.setTecnico(tecnico);
+        usuarioBase.setEspecialidad(Especialidad.ELECTRICISTA);
 
         when(usuarioRepository.findByRut(usuarioBase.getRut())).thenReturn(Optional.empty());
         when(passwordEncoder.encode(any())).thenReturn("encodedPass");
@@ -93,26 +88,24 @@ public class UsuarioServiceTest {
 
         assertThat(registrado.getRol()).isEqualTo(Rol.TECNICO);
         assertThat(registrado.getPassword()).isEqualTo("encodedPass");
-        assertThat(registrado.getTecnico()).isNotNull();
-        assertThat(registrado.getTecnico().getEspecialidad()).isEqualTo("electricista");
+        assertThat(registrado.getEspecialidad()).isEqualTo(Especialidad.ELECTRICISTA);
     }
 
     @Test
     void registrarTecnico_especialidadInvalida() {
-        Tecnico tecnico = new Tecnico();
-        tecnico.setEspecialidad("invalida");
-        usuarioBase.setTecnico(tecnico);
+        usuarioBase.setEspecialidad(null);
+
         when(usuarioRepository.findByRut(usuarioBase.getRut())).thenReturn(Optional.empty());
 
         IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
                 () -> usuarioService.registrarTecnico(usuarioBase));
-        assertThat(ex.getMessage()).startsWith("Especialidad inválida");
+        assertThat(ex.getMessage()).isEqualTo("Debe especificar una especialidad.");
     }
-
 
     @Test
     void registrarTecnicoSoporte_ok() {
         usuarioBase.setRol(null);
+
         when(usuarioRepository.findByRut(usuarioBase.getRut())).thenReturn(Optional.empty());
         when(usuarioRepository.findByEmail(usuarioBase.getEmail())).thenReturn(Optional.empty());
         when(passwordEncoder.encode(any())).thenReturn("encodedPass");
@@ -122,9 +115,10 @@ public class UsuarioServiceTest {
 
         assertThat(registrado.getRol()).isEqualTo(Rol.TECNICO_SOPORTE);
         assertThat(registrado.getPassword()).isEqualTo("encodedPass");
-        assertThat(registrado.getTecnicoSoporte()).isNotNull();
-    }
+        assertThat(registrado.getEspecialidad()).isNull();
 
+        verify(usuarioRepository).save(any(Usuario.class));
+    }
 
     @Test
     void registrarAdministrador_ok() {
@@ -138,9 +132,7 @@ public class UsuarioServiceTest {
 
         assertThat(registrado.getRol()).isEqualTo(Rol.ADMINISTRADOR);
         assertThat(registrado.getPassword()).isEqualTo("encodedPass");
-        assertThat(registrado.getAdministrador()).isNotNull();
     }
-
 
     @Test
     void login_ok() {
@@ -166,7 +158,7 @@ public class UsuarioServiceTest {
 
         RuntimeException ex = assertThrows(RuntimeException.class,
                 () -> usuarioService.login("noexiste@example.com", "password123"));
-        assertThat(ex.getMessage()).isEqualTo("Email no encontrado.");
+        assertThat(ex.getMessage()).isEqualTo("Email o contraseña inválidos.");
     }
 
     @Test
@@ -177,9 +169,8 @@ public class UsuarioServiceTest {
 
         RuntimeException ex = assertThrows(RuntimeException.class,
                 () -> usuarioService.login("juan@example.com", "wrongpass"));
-        assertThat(ex.getMessage()).isEqualTo("Contraseña inválida.");
+        assertThat(ex.getMessage()).isEqualTo("Email o contraseña inválidos.");
     }
-
 
     @Test
     void actualizarDatos_ok() {
@@ -201,7 +192,7 @@ public class UsuarioServiceTest {
     }
 
     @Test
-    void actualizarDatos_emailYaExiste() {
+    void actualizarDatos_emailYaRegistrado() {
         Usuario nuevosDatos = new Usuario();
         nuevosDatos.setEmail("otro@example.com");
 
@@ -214,7 +205,7 @@ public class UsuarioServiceTest {
 
         IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
                 () -> usuarioService.actualizarDatos(1L, nuevosDatos));
-        assertThat(ex.getMessage()).isEqualTo("El email ya existe.");
+        assertThat(ex.getMessage()).isEqualTo("El email ya está registrado.");
     }
 
     @Test
@@ -223,9 +214,8 @@ public class UsuarioServiceTest {
 
         RuntimeException ex = assertThrows(RuntimeException.class,
                 () -> usuarioService.actualizarDatos(99L, new Usuario()));
-        assertThat(ex.getMessage()).isEqualTo("Usuario no encontrado");
+        assertThat(ex.getMessage()).isEqualTo("Usuario no encontrado con ID: 99");
     }
-
 
     @Test
     void eliminarCuenta_ok() {
@@ -246,7 +236,6 @@ public class UsuarioServiceTest {
         assertThat(ex.getMessage()).isEqualTo("Usuario no encontrado");
     }
 
-
     @Test
     void buscarPorId_ok() {
         when(usuarioRepository.findById(1L)).thenReturn(Optional.of(usuarioBase));
@@ -265,7 +254,6 @@ public class UsuarioServiceTest {
         assertThat(ex.getMessage()).isEqualTo("Usuario no encontrado con ID: 99");
     }
 
-
     @Test
     void listarUsuarios_ok() {
         when(usuarioRepository.findAll()).thenReturn(List.of(usuarioBase));
@@ -276,7 +264,6 @@ public class UsuarioServiceTest {
         assertThat(usuarios.get(0)).isEqualTo(usuarioBase);
     }
 
-
     @Test
     void listarPorRol_ok() {
         Usuario tecnico = new Usuario();
@@ -285,11 +272,12 @@ public class UsuarioServiceTest {
         Usuario cliente = new Usuario();
         cliente.setRol(Rol.CLIENTE);
 
-        when(usuarioRepository.findAll()).thenReturn(List.of(usuarioBase, tecnico, cliente));
+        when(usuarioRepository.findByRol(Rol.CLIENTE)).thenReturn(List.of(cliente));
 
         List<Usuario> clientes = usuarioService.listarPorRol(Rol.CLIENTE);
 
         assertThat(clientes).hasSize(1);
         assertThat(clientes.get(0).getRol()).isEqualTo(Rol.CLIENTE);
     }
+
 }

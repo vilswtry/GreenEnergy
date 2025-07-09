@@ -3,6 +3,7 @@ package com.GreenEnergy.gestionProyectos.controller;
 import java.util.List;
 import java.util.NoSuchElementException;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -27,11 +28,8 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 @Tag(name = "Gestión de Proyectos", description = "Operaciones relacionadas con proyectos y mantenciones")
 public class ProyectoController {
 
-    private final ProyectoMantencionService proyectoService;
-
-    public ProyectoController(ProyectoMantencionService proyectoService) {
-        this.proyectoService = proyectoService;
-    }
+    @Autowired
+    private ProyectoMantencionService proyectoService;
 
     @Operation(summary = "Crear un nuevo proyecto", description = "Crea un proyecto nuevo y asigna recursos si están disponibles")
     @ApiResponses(value = {

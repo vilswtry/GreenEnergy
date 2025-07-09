@@ -1,6 +1,7 @@
 package com.GreenEnergy.gestionUsuarios.controller;
 
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -54,6 +55,10 @@ public class UsuarioController {
     })
     @PostMapping("/registro/tecnico")
     public ResponseEntity<?> registrarTecnico(@RequestBody Usuario usuario) {
+        if (usuario.getRol() == Rol.TECNICO && usuario.getEspecialidad() == null) {
+            return ResponseEntity.badRequest().body("La especialidad es obligatoria para técnicos.");
+        }
+
         try {
             Usuario nuevo = usuarioService.registrarTecnico(usuario);
             return new ResponseEntity<>(nuevo, HttpStatus.CREATED);
@@ -111,9 +116,17 @@ public class UsuarioController {
             @ApiResponse(responseCode = "500", description = "Error inesperado")
     })
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestParam String email, @RequestParam String password) {
+    public ResponseEntity<?> login(@RequestBody Map<String, String> loginData) {
         try {
+            String email = loginData.get("email");
+            String password = loginData.get("password");
+
+            if (email == null || password == null) {
+                return ResponseEntity.badRequest().body("Email y contraseña son requeridos.");
+            }
+
             Usuario usuario = usuarioService.login(email, password);
+            usuario.setPassword(null);
             return ResponseEntity.ok(usuario);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(e.getMessage());

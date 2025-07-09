@@ -4,6 +4,7 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.GreenEnergy.gestionProyectos.DTO.MantencionRequest;
@@ -13,8 +14,11 @@ import com.GreenEnergy.gestionProyectos.model.Mantencion;
 import com.GreenEnergy.gestionProyectos.model.Mantencion.EstadoMantencion;
 import com.GreenEnergy.gestionProyectos.model.Proyecto;
 import com.GreenEnergy.gestionProyectos.model.Proyecto.EstadoProyecto;
+import com.GreenEnergy.gestionProyectos.model.Rol;
+import com.GreenEnergy.gestionProyectos.model.Usuario;
 import com.GreenEnergy.gestionProyectos.repository.MantencionRepository;
 import com.GreenEnergy.gestionProyectos.repository.ProyectoRepository;
+import com.GreenEnergy.gestionProyectos.repository.UsuarioRepository;
 import com.GreenEnergy.gestionProyectos.webclient.CoordinacionClient;
 
 import jakarta.transaction.Transactional;
@@ -22,18 +26,31 @@ import jakarta.transaction.Transactional;
 @Transactional
 @Service
 public class ProyectoMantencionService {
-    private final ProyectoRepository proyectoRepository;
-    private final MantencionRepository mantencionRepository;
-    private final CoordinacionClient coordinacionClient;
 
-    public ProyectoMantencionService(ProyectoRepository proyectoRepository, MantencionRepository mantencionRepository,
-            CoordinacionClient coordinacionClient) {
-        this.proyectoRepository = proyectoRepository;
-        this.mantencionRepository = mantencionRepository;
-        this.coordinacionClient = coordinacionClient;
+    @Autowired
+    private ProyectoRepository proyectoRepository;
+
+    @Autowired
+    private MantencionRepository mantencionRepository;
+
+    @Autowired
+    private CoordinacionClient coordinacionClient;
+
+    @Autowired
+    private UsuarioRepository usuarioRepository;
+
+    private void validarCliente(Long clienteId) {
+        Usuario cliente = usuarioRepository.findById(clienteId)
+                .orElseThrow(() -> new RuntimeException("Cliente con ID " + clienteId + " no existe."));
+
+        if (cliente.getRol() != Rol.CLIENTE) {
+            throw new RuntimeException("El ID proporcionado no corresponde a un cliente válido.");
+        }
     }
 
     public Proyecto crearProyecto(ProjectRequest request) {
+
+        validarCliente(request.getClienteId());
 
         Optional<Proyecto> existente = proyectoRepository.findByNombreAndFechaInicioAndFechaFin(
                 request.getNombre(), request.getFechaInicio(), request.getFechaFin());
@@ -65,6 +82,7 @@ public class ProyectoMantencionService {
         nuevoProyecto.setFechaFin(request.getFechaFin());
         nuevoProyecto.setEstado(EstadoProyecto.CREADO);
         nuevoProyecto.setRecursosAsignados(false);
+        nuevoProyecto.setClienteId(request.getClienteId());
 
         nuevoProyecto = proyectoRepository.save(nuevoProyecto);
 
@@ -82,6 +100,8 @@ public class ProyectoMantencionService {
     }
 
     public Mantencion crearMantencion(MantencionRequest request) {
+
+        validarCliente(request.getClienteId());
 
         Optional<Mantencion> existente = mantencionRepository.findByNombreAndFechaMantencion(request.getNombre(),
                 request.getFechaMantencion());
@@ -113,6 +133,7 @@ public class ProyectoMantencionService {
         nuevaMantencion.setCantidadPaneles(request.getCantidadPaneles());
         nuevaMantencion.setEstado(EstadoMantencion.CREADO);
         nuevaMantencion.setRecursosAsignados(false);
+        nuevaMantencion.setClienteId(request.getClienteId());
 
         nuevaMantencion = mantencionRepository.save(nuevaMantencion);
 

@@ -29,6 +29,10 @@ public class Reporte {
     @Schema(description = "ID único del reporte", example = "1")
     private Long id;
 
+    @Column(name = "id_cliente", nullable = false)
+    @Schema(description = "ID del cliente asociado al proyecto o mantención", example = "42")
+    private Long clienteId;
+
     @Column(name = "id_proyecto_mantencion", nullable = false)
     @Schema(description = "ID del proyecto o mantención asociado al reporte", example = "15")
     private Long idProyectoMantencion;
@@ -62,4 +66,6 @@ public class Reporte {
             return 0;
         return ChronoUnit.DAYS.between(inicio, fin) + 1;
     }
+
+    
 }

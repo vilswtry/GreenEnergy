@@ -16,6 +16,9 @@ public class ProjectRequest {
     @Schema(description = "ID del proyecto", example = "1")
     private Long proyectoId;
 
+    @Schema(description = "ID del cliente que solicita el proyecto", example = "10", required = true)
+    private Long clienteId;
+
     @Schema(description = "Nombre del proyecto", example = "Instalación Solar en Casa Pérez")
     private String nombre;
 

@@ -3,6 +3,7 @@ package com.GreenEnergy.gestionProyectos.model;
 import java.time.LocalDate;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -49,5 +50,9 @@ public class Proyecto {
 
     @Schema(description = "Indica si los recursos han sido asignados al proyecto", example = "false")
     private boolean recursosAsignados;
+
+    @Schema(description = "ID del cliente asociado a este proyecto", example = "10")
+    @Column(nullable = false)
+    private Long clienteId;
 
 }

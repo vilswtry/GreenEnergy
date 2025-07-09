@@ -35,6 +35,8 @@ public class ReporteService {
         reporte.setIdProyectoMantencion(proyectoId);
         reporte.setTipoProyecto(tipo.toUpperCase());
 
+        Long clienteId;
+
         if (tipo.equalsIgnoreCase("PROYECTO")) {
             Proyecto proyecto = proyectoRepository.findById(proyectoId)
                     .orElseThrow(() -> new RuntimeException("Proyecto no encontrado"));
@@ -46,6 +48,8 @@ public class ReporteService {
             long duracion = Reporte.calcularDuracionEnDias(proyecto.getFechaInicio(), proyecto.getFechaFin());
             reporte.setDuracionDias(duracion);
 
+            clienteId = proyecto.getClienteId(); 
+
         } else if (tipo.equalsIgnoreCase("MANTENCION")) {
             Mantencion mantencion = mantencionRepository.findById(proyectoId)
                     .orElseThrow(() -> new RuntimeException("Mantención no encontrada"));
@@ -56,10 +60,13 @@ public class ReporteService {
 
             reporte.setDuracionDias(1L);
 
+            clienteId = mantencion.getClienteId();
+
         } else {
             throw new RuntimeException("Tipo inválido: debe ser 'PROYECTO' o 'MANTENCION'");
         }
 
+        reporte.setClienteId(clienteId);
         reporte.setProblemasReportados(problemas);
         reporte.setRetroalimentacionCliente(retroalimentacion);
         reporte.setEficiencia(eficiencia);
